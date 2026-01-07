@@ -64,11 +64,13 @@ class SimpleChatRequest(BaseModel):
 async def chat_stream(request: SimpleChatRequest):
     """Streaming chat endpoint."""
     try:
-        await runner.session_service.get_session(
-            request.session_id, app_name=adk_app.name, user_id=request.user_id
+        session = await runner.session_service.get_session(
+            session_id=request.session_id, app_name=adk_app.name, user_id=request.user_id
         )
     except Exception:
-        await runner.session_service.create_session(
+        session = None
+    if not session:
+        session = await runner.session_service.create_session(
             app_name=adk_app.name,
             user_id=request.user_id,
             session_id=request.session_id,
@@ -81,7 +83,7 @@ async def chat_stream(request: SimpleChatRequest):
     async def event_generator():
         final_text = ""
         async for event in runner.run_async(
-            user_id=request.user_id, session_id=request.session_id, new_message=user_msg
+            user_id=request.user_id, session_id=session.id, new_message=user_msg
         ):
             # Send progress updates based on which agent is active
             if event.author == "researcher":
@@ -90,13 +92,13 @@ async def chat_stream(request: SimpleChatRequest):
                  yield json.dumps({"type": "progress", "text": "⚖️ Judge is evaluating findings..."}) + "\n"
             elif event.author == "content_builder":
                  yield json.dumps({"type": "progress", "text": "✍️ Content Builder is writing the course..."}) + "\n"
-            
+
             # Accumulate final text
             if event.content and event.content.parts:
                 for part in event.content.parts:
                     if part.text:
                         final_text += part.text
-        
+
         # Send final result
         yield json.dumps({"type": "result", "text": final_text.strip()}) + "\n"
 

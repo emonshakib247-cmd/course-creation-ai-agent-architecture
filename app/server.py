@@ -119,12 +119,13 @@ async def chat(request: SimpleChatRequest):
     """Simple chat endpoint for the frontend."""
     # Ensure session exists
     try:
-        await runner.session_service.get_session(
-            request.session_id, app_name=adk_app.name, user_id=request.user_id
+        session = await runner.session_service.get_session(
+            session_id=request.session_id, app_name=adk_app.name, user_id=request.user_id
         )
     except Exception:
-        # Session doesn't exist, create it
-        await runner.session_service.create_session(
+        session = None
+    if not session:
+        session = await runner.session_service.create_session(
             app_name=adk_app.name,
             user_id=request.user_id,
             session_id=request.session_id,
@@ -136,7 +137,7 @@ async def chat(request: SimpleChatRequest):
 
     final_text = ""
     async for event in runner.run_async(
-        user_id=request.user_id, session_id=request.session_id, new_message=user_msg
+        user_id=request.user_id, session_id=session.id, new_message=user_msg
     ):
         # Collect text from all agent responses (including intermediate ones if desired,
         # but usually we just want the final one or we stream. For simplicity, let's
