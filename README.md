@@ -7,7 +7,7 @@ A multi-agent system built with Google's Agent Development Kit (ADK) and Agent-t
 This project uses a distributed microservices architecture where each agent runs in its own container and communicates via A2A:
 
 *   **Orchestrator Service (`orchestrator/`):** The main entry point. It manages the workflow using `LoopAgent` and `SequentialAgent`, and connects to other agents using `RemoteA2aAgent`. It also serves the frontend.
-*   **Researcher Service (`researcher/`):** A standalone agent that gathers information using Google Search.
+*   **Researcher Service (`/`):** A standalone agent that gathers information using Google Search.
 *   **Judge Service (`judge/`):** A standalone agent that evaluates research quality.
 *   **Content Builder Service (`content_builder/`):** A standalone agent that compiles the final course.
 
